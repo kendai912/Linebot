@@ -1,0 +1,102 @@
+body {
+  max-width: 1366px;
+  margin: 50px auto;
+}
+
+table {
+  margin: 0 auto;
+}
+
+.row-head {
+  border-collapse: collapse;
+  vertical-align: middle;
+  width: 100%;
+}
+
+.row-head th,
+.row-head td {
+  border: 1px solid #dbe1e8;
+  padding: 8px;
+}
+
+.row-head th {
+  background: #f9fafc;
+}
+
+.row-head label {
+  line-height: 34px;
+  margin: 0;
+}
+
+@media only screen and (max-width: 800px) {
+  .row-head thead {
+    display: none;
+  }
+
+  .row-head tr,
+  .row-head td {
+    display: block;
+    width: auto;
+  }
+
+  .row-head tr {
+    border: 1px solid #dbe1e8;
+    border-radius: 5px;
+    box-shadow: 3px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    padding: 8px 8px 0;
+  }
+
+  .row-head td {
+    border: none;
+    border-bottom: 1px solid #dbe1e8;
+    display: flex;
+    justify-content: space-between;
+    text-align: right;
+  }
+  .row-head td:last-child {
+    border-bottom: none;
+  }
+  .row-head td::before {
+    content: attr(aria-label);
+    display: inline-block;
+    font-weight: bold;
+    float: left;
+    text-align: left;
+    padding-right: 20px;
+    white-space: nowrap;
+  }
+
+  .row-head.header-check tr {
+    padding-left: 40px;
+    position: relative;
+  }
+  .row-head.header-check td:first-child {
+    align-items: center;
+    background: #fff;
+    border-right: 1px solid #dbe1e8;
+    border-bottom: none;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    left: 0;
+    padding: 0;
+    position: absolute;
+    text-align: center;
+    top: 0;
+    width: 40px;
+  }
+  .row-head.header-check td:first-child::before {
+    display: none;
+  }
+}
+
+input {
+  width: 95%;
+  height: 100%;
+  font-size: 1rem;
+}
+
+button {
+  font-size: 0.8rem;
+}
