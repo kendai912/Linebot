@@ -1,6 +1,13 @@
 body {
   max-width: 1366px;
-  margin: 50px auto;
+  margin: 0 auto;
+}
+
+.logoutBox {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin: 20px;
 }
 
 table {

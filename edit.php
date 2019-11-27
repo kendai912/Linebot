@@ -1,6 +1,12 @@
 <?php
 include("funcs.php");
 
+//sessionによるバリデーション
+chk_ssid();
+
+//ログインチェック
+chk_login();
+
 //DB接続
 $pdo = db_conn();
 
@@ -31,6 +37,7 @@ if ($status == false) {
   <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 </head>
 <body>
+<?php include('header.php'); ?>
 <form method="POST" action="./update.php">
   <table class="row-head header-check">
     <thead>

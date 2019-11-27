@@ -2,16 +2,19 @@
 include("funcs.php");
 
 //tokenを発行
-if (!isset($_SESSION['token'])) {
-    $_SESSION['token'] = bin2hex(openssl_random_pseudo_bytes(16));
-}
+// if (!isset($_SESSION['token'])) {
+//     $_SESSION['token'] = bin2hex(openssl_random_pseudo_bytes(16));
+// }
+
+//sessionを格納
+$_SESSION['chk_ssid'] = session_id();
 
 //バリデーション
 if ($_GET['param'] == "unmatch") {
     $error_message = "ユーザー名・パスワードが正しくありません";
 }
 if ($_GET['param'] == "invalidToken") {
-    $error_message = "Invalid Token!!";
+    $error_message = "ログインしていません";
 }
 
 ?>
@@ -38,7 +41,7 @@ if ($_GET['param'] == "invalidToken") {
       <input type="password" name="password" required onkeyup="this.setAttribute('value', this.value);" value="">
       <label>パスワード</label>
     </div>
-    <input type="hidden" name="token" value="<?= h($_SESSION['token']) ?>">
+    <!-- <input type="hidden" name="token" value="<?= h($_SESSION['token']) ?>"> -->
     <input type="submit" name="login" value="ログイン">
   </form>
 </div>

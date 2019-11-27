@@ -1,6 +1,9 @@
 <?php
 include("funcs.php");
 
+//sessionによるバリデーション
+chk_ssid();
+
 //DB接続
 $pdo = db_conn();
 

@@ -2,22 +2,31 @@
 include("funcs.php");
 
 //tokenによるバリデーション
-if (!isset($_POST['token']) || $_POST['token'] !== $_SESSION['token']) {
-    redirect("login.php", "?param=invalidToken");
-}
+// if (!isset($_POST['token']) || $_POST['token'] !== $_SESSION['token']) {
+//     redirect("login.php", "?param=invalidToken");
+// }
 
+//sessionによるバリデーション
+chk_ssid();
 
 //POSTデータ取得
-$userName = $_POST['userName'];
-$password = $_POST['password'];
+if (!isset($_POST['userName']) || !isset($_POST['password'])) {
+    redirect("login.php", "?param=invalidToken");
+} else {
+    $userName = $_POST['userName'];
+    $password = $_POST['password'];
+}
 
 //DB接続
 $pdo = db_conn();
 
 //id取得
 $sqlSelect = "SELECT id from futsal_movies_users WHERE lname = :lname AND lpw = :lpw";
+//(サーバーにあげるときコメントアウトとる)
+// $sqlSelect = "SELECT id, lpw from futsal_movies_users WHERE lname = :lname";
 $stmt = $pdo->prepare($sqlSelect);
 $stmt->bindValue(':lname', $userName, PDO::PARAM_STR);
+//(コメントアウトする＠サーバーにあげるとき)
 $stmt->bindValue(':lpw', $password, PDO::PARAM_STR);
 $status = $stmt->execute();
 
@@ -28,6 +37,11 @@ if ($status == false) {
     $result = $stmt->fetch();
     $tableId = $result['id'];
 
+    //hash化したパスワードによる認証(サーバーにあげるときコメントアウトとる)
+    // if (!password_verify($password, $result['lpw'])) {
+    //     redirect("login.php", "?param=unmatch");
+    // }
+
     $tableName = "futsal_movies_table_" . $tableId;
     $sqlSelect = "SELECT * from " . $tableName;
     $stmt = $pdo->prepare($sqlSelect);
@@ -35,7 +49,7 @@ if ($status == false) {
     while ($data[] = $stmt->fetch(PDO::FETCH_ASSOC));
     $json = json_encode($data);
 
-    //sessionに保存
+    //sessionに保存(ログインチェックに使用)
     $_SESSION['userName'] = $userName;
     $_SESSION['password'] = $password;
     $_SESSION['tableId'] = $tableId;
@@ -55,6 +69,7 @@ if ($status == false) {
   <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 </head>
 <body>
+<?php include('header.php') ?>
 <table class="row-head header-check">
   <thead>
     <tr>
