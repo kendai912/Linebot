@@ -66,14 +66,16 @@ if ($status == false) {
   <title>データ編集画面</title>
   <link rel="stylesheet" href="css/reset.css" />
   <link rel="stylesheet" href="css/styleSelect.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.0/css/theme.default.min.css">
   <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.0/js/jquery.tablesorter.min.js"></script>
 </head>
 <body>
 <?php include('header.php') ?>
-<table class="row-head header-check">
+<table id="myTable" class="tablesorter row-head header-check">
   <thead>
     <tr>
-      <th width="40"></th>
+      <!-- <th width="40"></th> -->
       <th width="40">id</th>
       <th width="80">URL</th>
       <th width="150">タグ</th>
@@ -90,7 +92,7 @@ $.each(data, function(index, value) {
   let row;
   if(index != (data.length - 1)) {
     row += '<tr>';
-    row += '<td align="center"><input type="checkbox" id="' + value.id + '"></td>';
+    // row += '<td align="center"><input type="checkbox" id="' + value.id + '"></td>';
     row += '<td aria-label="id">' + value.id + '</td>';
     row += '<td aria-label="URL">' + value.url + '</td>';
     row += '<td aria-label="タグ">' + value.tag + '</td>';
@@ -104,6 +106,12 @@ $.each(data, function(index, value) {
   }
 
 })
+
+$("#myTable").tablesorter({
+  headers: {
+    4: {sorter:false}
+  }
+}); 
 
 </script>
 

@@ -4,6 +4,14 @@ include("funcs.php");
 //sessionによるバリデーション
 chk_ssid();
 
+//ログインチェック
+chk_login();
+
+//URL, タグの入力バリデーション
+if (!preg_match('/(?<url>^((http[s]?|ftp):\/)?\/?([^:\/\s]+)((\/\w+)*\/)([\w\-\.]+[^#?\s]+)?(#[\w\-]+)?$)/', $_POST['url']) || !preg_match_all('/(?<tags>^[＃|#|♯][ｦ-ﾟー゛゜々ヾヽぁ-ヶ一-龠ａ-ｚＡ-Ｚ０-９a-zA-Z0-9_]*[ｦ-ﾟー゛゜々ヾヽぁ-ヶ一-龠ａ-ｚＡ-Ｚ０-９a-zA-Z]+[ｦ-ﾟー゛゜々ヾヽぁ-ヶ一-龠ａ-ｚＡ-Ｚ０-９a-zA-Z0-9_]*)(?:[\s| |　]+[＃|#|♯][ｦ-ﾟー゛゜々ヾヽぁ-ヶ一-龠ａ-ｚＡ-Ｚ０-９a-zA-Z0-9_]+)*[\s| |　]*$/u', $_POST['tag'])) {
+    redirect("edit.php", "?param=invalidForm");
+}
+
 //DB接続
 $pdo = db_conn();
 

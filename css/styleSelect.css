@@ -10,6 +10,13 @@ body {
   margin: 20px;
 }
 
+.errorBox {
+  position: absolute;
+  top: 20px;
+  color: red;
+  font-size: 0.9rem;
+}
+
 table {
   margin: 0 auto;
 }

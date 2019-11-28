@@ -4,6 +4,9 @@ include("funcs.php");
 //sessionによるバリデーション
 chk_ssid();
 
+//ログインチェック
+chk_login();
+
 //DB接続
 $pdo = db_conn();
 

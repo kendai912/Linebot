@@ -38,6 +38,9 @@ if ($status == false) {
 </head>
 <body>
 <?php include('header.php'); ?>
+<?php if ($_GET['param'] == "invalidForm") : ?>
+<div class="errorBox">URL・タグの入力が正しくありません</div>
+<?php endif; ?>
 <form method="POST" action="./update.php">
   <table class="row-head header-check">
     <thead>
@@ -52,7 +55,7 @@ if ($status == false) {
     </tbody>
   </table>
   <input type="hidden" name="id" value="<?= h($_GET['id']) ?>">
-  <input type="hidden" name="token" value="<?= h($_SESSION['token']) ?>">
+  <!-- <input type="hidden" name="token" value="<?= h($_SESSION['token']) ?>"> -->
 </form>
 
 <script>
