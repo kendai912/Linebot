@@ -41,7 +41,6 @@ if ($_GET['param'] == "invalidToken") {
       <input type="password" name="password" required onkeyup="this.setAttribute('value', this.value);" value="">
       <label>パスワード</label>
     </div>
-    <!-- <input type="hidden" name="token" value="<?= h($_SESSION['token']) ?>"> -->
     <input type="submit" name="login" value="ログイン">
   </form>
 </div>

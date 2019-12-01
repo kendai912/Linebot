@@ -214,7 +214,7 @@ if ($resultGetURL && $resultGetTag) {
             'titleTag' => $tagLine,
             'duration' => 0,
             'title' => 'hoge',
-            'sceneTag' => [
+            'sceneTags' => [
                 '00:00~01:00' => '#hoge',
                 '01:00~02:00' => '#foo'
             ]
