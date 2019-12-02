@@ -27,10 +27,11 @@ function onYouTubeIframeAPIReady() {
     videoId: "H0knBbQsrUE",
     playerVars: {
       color: "white"
+    },
+    events: {
+      onReady: onPlayerReady
+      // onReady: initialize
     }
-    // events: {
-    //   onReady: initialize
-    // }
   });
 }
 
@@ -43,6 +44,11 @@ function formatTime(time) {
   seconds = seconds < 10 ? "0" + seconds : seconds;
 
   return minutes + ":" + seconds;
+}
+
+function onPlayerReady(event) {
+  event.target.mute();
+  event.target.playVideo();
 }
 
 // function initialize() {
@@ -108,37 +114,9 @@ function tagTimeValidate() {
 
   //再生時間内かチェック
   let duration = formatTime(player.getDuration());
-  let durationSec =
-    parseInt(duration.split(":")[0], 10) * 60 +
-    parseInt(duration.split(":")[1], 10);
-  let startSec =
-    parseInt(
-      $("#startTime")
-        .val()
-        .split(":")[0],
-      10
-    ) *
-      60 +
-    parseInt(
-      $("#startTime")
-        .val()
-        .split(":")[1],
-      10
-    );
-  let endSec =
-    parseInt(
-      $("#endTime")
-        .val()
-        .split(":")[0],
-      10
-    ) *
-      60 +
-    parseInt(
-      $("#endTime")
-        .val()
-        .split(":")[1],
-      10
-    );
+  let durationSec = convertToSec(duration);
+  let startSec = convertToSec($("#startTime").val());
+  let endSec = convertToSec($("#endTime").val());
 
   if (
     startSec < 0 ||
@@ -154,6 +132,13 @@ function tagTimeValidate() {
   }
 
   return true;
+}
+
+function convertToSec(timeMinSec) {
+  return (
+    parseInt(timeMinSec.split(":")[0], 10) * 60 +
+    parseInt(timeMinSec.split(":")[1], 10)
+  );
 }
 
 function tagNameValidate() {
@@ -177,21 +162,23 @@ $(function() {
   //----------------------------------------------------
   // イベント(Youtube関連)
   //----------------------------------------------------
+  //開始ボタン
   $("#startBtn").on("click", function() {
+    player.playVideo();
     $("#startTime").val(formatTime(player.getCurrentTime()));
     $(this).hide();
     $("#endBtn").show();
   });
 
+  //終了ボタン
   $("#endBtn").on("click", function() {
     $("#endTime").val(formatTime(player.getCurrentTime()));
     $(this).hide();
     $("#startBtn").show();
+    player.pauseVideo();
   });
 
-  //----------------------------------------------------
-  // イベント(firebase関連)
-  //----------------------------------------------------
+  //保存ボタン
   $("#saveBtn").on("click", function() {
     //保存時のバリデーション
     if (tagTimeValidate()) {
@@ -229,4 +216,70 @@ $(function() {
         .fadeOut(2000);
     }
   });
+
+  //----------------------------------------------------
+  // イベント(firebase関連)
+  //----------------------------------------------------
+  //読み込み時のタイトル・タグ・登録日時表示
+  database.ref(userId + "/" + movieId).on("value", function(data) {
+    try {
+      let outlineHTML = "<p>" + data.val().title + "<br>";
+      outlineHTML += data.val().titleTag + "<br>";
+      outlineHTML += data.val().indate + "</p>";
+      $(".outline").html(outlineHTML);
+    } catch (e) {
+      console.log("firebase is not set");
+    }
+  });
+
+  //シーンタグ一覧の表示
+  database
+    .ref(userId + "/" + movieId + "/sceneTags/")
+    .on("value", function(data) {
+      try {
+        let sceneTagsArray = [];
+        $.each(data.val(), function(index, value) {
+          value["sceneTagKey"] = index;
+          sceneTagsArray.push(value);
+        });
+
+        sceneTagsArray.sort(function(a, b) {
+          if (convertToSec(a.startTime) < convertToSec(b.startTime)) {
+            return -1;
+          }
+          if (convertToSec(a.startTime) > convertToSec(b.startTime)) {
+            return 1;
+          }
+          return 0;
+        });
+
+        let originalSrc = $("#iframeBox").attr("src");
+        $("#sceneTagsBox").html("全体を再生<br>シーンを再生<br>");
+        $.each(sceneTagsArray, function(index, value) {
+          $("#sceneTagsBox").append(
+            '<div id="' +
+              value.sceneTagKey +
+              '">' +
+              value.startTime +
+              "〜" +
+              value.endTime +
+              ": " +
+              value.sceneTags +
+              "</div>"
+          );
+          $("#" + value.sceneTagKey).on("click", function() {
+            $("#iframeBox").attr(
+              "src",
+              originalSrc +
+                "&start=" +
+                convertToSec(value.startTime) +
+                "&end=" +
+                convertToSec(value.endTime)
+            );
+          });
+        });
+      } catch (e) {
+        console.log("firebase is not set");
+      }
+    });
 });
