@@ -85,12 +85,97 @@ function formatTime(time) {
 //   );
 // }
 
+//----------------------------------------------------
+// ファンクション(バリデーション関連)
+//----------------------------------------------------
+function tagTimeValidate() {
+  //空白チェック
+  if ($("#startTime").val() == "" || $("#startTime").val() == "") {
+    return false;
+  }
+
+  //時刻型かチェック
+  if (
+    !$("#startTime")
+      .val()
+      .match(/^\d{1,2}\:\d{1,2}$/) ||
+    !$("#endTime")
+      .val()
+      .match(/^\d{1,2}\:\d{1,2}$/)
+  ) {
+    return false;
+  }
+
+  //再生時間内かチェック
+  let duration = formatTime(player.getDuration());
+  let durationSec =
+    parseInt(duration.split(":")[0], 10) * 60 +
+    parseInt(duration.split(":")[1], 10);
+  let startSec =
+    parseInt(
+      $("#startTime")
+        .val()
+        .split(":")[0],
+      10
+    ) *
+      60 +
+    parseInt(
+      $("#startTime")
+        .val()
+        .split(":")[1],
+      10
+    );
+  let endSec =
+    parseInt(
+      $("#endTime")
+        .val()
+        .split(":")[0],
+      10
+    ) *
+      60 +
+    parseInt(
+      $("#endTime")
+        .val()
+        .split(":")[1],
+      10
+    );
+
+  if (
+    startSec < 0 ||
+    endSec < 0 ||
+    startSec > durationSec ||
+    endSec > durationSec
+  ) {
+    return false;
+  }
+  //開始より終了のが後かチェック
+  if (startSec > endSec) {
+    return false;
+  }
+
+  return true;
+}
+
+function tagNameValidate() {
+  if (
+    !$("#sceneTags")
+      .val()
+      .match(
+        /^[＃|#|♯][ｦ-ﾟー゛゜々ヾヽぁ-ヶ一-龠ａ-ｚＡ-Ｚ０-９a-zA-Z0-9_]*[ｦ-ﾟー゛゜々ヾヽぁ-ヶ一-龠ａ-ｚＡ-Ｚ０-９a-zA-Z]+[ｦ-ﾟー゛゜々ヾヽぁ-ヶ一-龠ａ-ｚＡ-Ｚ０-９a-zA-Z0-9_]*(?:[\s| |　]+[＃|#|♯][ｦ-ﾟー゛゜々ヾヽぁ-ヶ一-龠ａ-ｚＡ-Ｚ０-９a-zA-Z0-9_]+)*[\s| |　]*$/u
+      )
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
 $(function() {
   let userId = "U5675b178054001cb3f7f6f00920faa92"; // SESSION使うよう後で修正
   let movieId = "-Lv2qggG0ixXQLX3zrfz"; // SESSION使うよう後で修正
 
   //----------------------------------------------------
-  // イベント(youtube関連)
+  // イベント(Youtube関連)
   //----------------------------------------------------
   $("#startBtn").on("click", function() {
     $("#startTime").val(formatTime(player.getCurrentTime()));
@@ -108,24 +193,40 @@ $(function() {
   // イベント(firebase関連)
   //----------------------------------------------------
   $("#saveBtn").on("click", function() {
-    database.ref(userId + "/" + movieId + "/sceneTags").push({
-      startTime: $("#startTime").val(),
-      endTime: $("#endTime").val(),
-      sceneTags: $("#sceneTags").val()
-    });
-    $("#saveDoneBox")
-      .text(
-        $("#startTime").val() +
-          "〜" +
-          $("#endTime").val() +
-          ": 「" +
-          $("#sceneTags").val() +
-          "」を保存しました"
-      )
-      .fadeIn(2000)
-      .fadeOut(2000);
-    $("#startTime").val("");
-    $("#endTime").val("");
-    $("#sceneTags").val("");
+    //保存時のバリデーション
+    if (tagTimeValidate()) {
+      if (tagNameValidate()) {
+        database.ref(userId + "/" + movieId + "/sceneTags").push({
+          startTime: $("#startTime").val(),
+          endTime: $("#endTime").val(),
+          sceneTags: $("#sceneTags").val()
+        });
+
+        $("#saveDoneBox")
+          .text(
+            $("#startTime").val() +
+              "〜" +
+              $("#endTime").val() +
+              ": 「" +
+              $("#sceneTags").val() +
+              "」を保存しました"
+          )
+          .fadeIn(2000)
+          .fadeOut(2000);
+        $("#startTime").val("");
+        $("#endTime").val("");
+        $("#sceneTags").val("");
+      } else {
+        $("#saveDoneBox")
+          .text("タグの入力が正しくありません")
+          .fadeIn(2000)
+          .fadeOut(2000);
+      }
+    } else {
+      $("#saveDoneBox")
+        .text("時間の入力が正しくありません")
+        .fadeIn(2000)
+        .fadeOut(2000);
+    }
   });
 });
