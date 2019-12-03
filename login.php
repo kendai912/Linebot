@@ -1,11 +1,6 @@
 <?php
 include("funcs.php");
 
-//tokenを発行
-// if (!isset($_SESSION['token'])) {
-//     $_SESSION['token'] = bin2hex(openssl_random_pseudo_bytes(16));
-// }
-
 //sessionを格納
 $_SESSION['chk_ssid'] = session_id();
 
@@ -29,7 +24,7 @@ if ($_GET['param'] == "invalidToken") {
 </head>
 <body>
 <div class="box">
-  <form method="POST" action="./select.php">
+  <form method="POST" action="./top.php">
     <div class="errorBox">  
       <?= $error_message ?>
     </div>

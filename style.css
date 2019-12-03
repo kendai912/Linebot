@@ -1,4 +1,4 @@
-@media screen and (max-width: 480px) {
+/* @media screen and (max-width: 480px) {
   body {
     background: blue;
   }
@@ -12,4 +12,42 @@
   body {
     background: red;
   }
+} */
+.logoutBox {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin: 20px;
+}
+
+.input-group.md-form.form-sm.form-2 input {
+  border: 1px solid #bdbdbd;
+  border-top-left-radius: 0.25rem;
+  border-bottom-left-radius: 0.25rem;
+}
+
+.input-group.md-form.form-sm.form-2 input.red-border {
+  border: 1px solid #ef9a9a;
+}
+
+.movieSec {
+  height: 150px;
+  width: auto;
+  margin: 10px 0;
+}
+
+.movieSecTopBox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.topIframeBox {
+  width: 150px;
+  height: 100px;
+}
+
+.topIframe {
+  width: 150px;
+  height: 100px;
 }

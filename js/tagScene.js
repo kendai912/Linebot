@@ -157,7 +157,7 @@ function tagNameValidate() {
 
 $(function() {
   let userId = "U5675b178054001cb3f7f6f00920faa92"; // SESSION使うよう後で修正
-  let movieId = "-Lv2qggG0ixXQLX3zrfz"; // SESSION使うよう後で修正
+  let movieId = "-LvA72rP0D60Hq7DzvE6"; // SESSION使うよう後で修正
 
   //----------------------------------------------------
   // イベント(Youtube関連)

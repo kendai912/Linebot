@@ -19,6 +19,7 @@
     <header style="background-color:rgb(117, 151, 203)">
       フットサル動画ストック
     </header>
+    <?php include('header.php'); ?>
     <div class="embed-responsive embed-responsive-16by9">
       <iframe
         id="iframeBox"
