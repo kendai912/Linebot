@@ -24,13 +24,11 @@ let player;
 
 function onYouTubeIframeAPIReady() {
   player = new YT.Player("iframeBox", {
-    videoId: "H0knBbQsrUE",
     playerVars: {
       color: "white"
     },
     events: {
       onReady: onPlayerReady
-      // onReady: initialize
     }
   });
 }
@@ -50,46 +48,6 @@ function onPlayerReady(event) {
   event.target.mute();
   event.target.playVideo();
 }
-
-// function initialize() {
-// Update the controls on load
-// updateTimerDisplay();
-// updateProgressBar();
-
-// Clear any old interval.
-// let time_update_interval;
-// clearInterval(time_update_interval);
-
-// Start interval to update elapsed time display and
-// the elapsed part of the progress bar every second.
-// time_update_interval = setInterval(function() {
-//   updateTimerDisplay();
-//   updateProgressBar();
-// }, 1000);
-// }
-
-// // This function is called by initialize()
-// function updateTimerDisplay() {
-//   // Update current time text display.
-//   $("#current-time").text(formatTime(player.getCurrentTime()));
-//   $("#duration").text(formatTime(player.getDuration()));
-// }
-
-// $("#progress-bar").on("mouseup touchend", function(e) {
-//   // Calculate the new time for the video.
-//   // new time in seconds = total duration in seconds * ( value of range input / 100 )
-//   var newTime = player.getDuration() * (e.target.value / 100);
-
-//   // Skip video to new time.
-//   player.seekTo(newTime);
-// });
-
-// function updateProgressBar() {
-//   // Update the value of our progress bar accordingly.
-//   $("#progress-bar").val(
-//     (player.getCurrentTime() / player.getDuration()) * 100
-//   );
-// }
 
 //----------------------------------------------------
 // ファンクション(バリデーション関連)
@@ -156,14 +114,18 @@ function tagNameValidate() {
 }
 
 $(function() {
-  let userId = "U5675b178054001cb3f7f6f00920faa92"; // SESSION使うよう後で修正
-  let movieId = "-LvA72rP0D60Hq7DzvE6"; // SESSION使うよう後で修正
+  //phpファイルからのuserId, movieIdの引継ぎ
+  let userId = $("#userId").data("val");
+  let movieId = $("#movieId").data("val");
+  // let userId = "U5675b178054001cb3f7f6f00920faa92";
+  // let movieId = "-LvA72rP0D60Hq7DzvE6";
 
   //----------------------------------------------------
   // イベント(Youtube関連)
   //----------------------------------------------------
   //開始ボタン
-  $("#startBtn").on("click", function() {
+  $("#startBtn").on("click", function(e) {
+    e.preventDefault();
     player.playVideo();
     $("#startTime").val(formatTime(player.getCurrentTime()));
     $(this).hide();
@@ -171,7 +133,8 @@ $(function() {
   });
 
   //終了ボタン
-  $("#endBtn").on("click", function() {
+  $("#endBtn").on("click", function(e) {
+    e.preventDefault();
     $("#endTime").val(formatTime(player.getCurrentTime()));
     $(this).hide();
     $("#startBtn").show();
@@ -179,7 +142,8 @@ $(function() {
   });
 
   //保存ボタン
-  $("#saveBtn").on("click", function() {
+  $("#saveBtn").on("click", function(e) {
+    e.preventDefault();
     //保存時のバリデーション
     if (tagTimeValidate()) {
       if (tagNameValidate()) {
@@ -253,8 +217,15 @@ $(function() {
           return 0;
         });
 
-        let originalSrc = $("#iframeBox").attr("src");
-        $("#sceneTagsBox").html("全体を再生<br>シーンを再生<br>");
+        let originalSrc = $("#originalSrc").data("val");
+        $("#sceneTagsBox").html(
+          '<div id="playAll">全体を再生</div><div id="playScene">シーンを再生</div>'
+        );
+        //全体再生イベント
+        $("#playAll").on("click", function() {
+          $("#iframeBox").attr("src", originalSrc);
+        });
+
         $.each(sceneTagsArray, function(index, value) {
           $("#sceneTagsBox").append(
             '<div id="' +
@@ -267,6 +238,7 @@ $(function() {
               value.sceneTags +
               "</div>"
           );
+          //シーン再生イベント
           $("#" + value.sceneTagKey).on("click", function() {
             $("#iframeBox").attr(
               "src",

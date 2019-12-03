@@ -28,17 +28,14 @@ function convertToSec(timeMinSec) {
 }
 
 //----------------------------------------------------
-// イベント(firebase関連)
+// イベント
 //----------------------------------------------------
-//読み込み時の一覧表示
+//読み込み時の一覧表示(firebase接続)
 let userId = $("#userId").data("val");
-// console.log(userId);
 
 database.ref(userId).on("value", function(data) {
   try {
     $.each(data.val(), function(index, value) {
-      console.log(value);
-      // console.log(index);
       let sceneTagsArray = [];
       $.each(value.sceneTags, function(sceneTagIndex, sceneTagValue) {
         sceneTagValue["sceneTagKey"] = sceneTagIndex;
@@ -54,25 +51,26 @@ database.ref(userId).on("value", function(data) {
         }
         return 0;
       });
-      console.log(sceneTagsArray);
 
-      let movieSecHTML = '<div class="movieSec" id="movieSec_' + index + '">';
-      movieSecHTML += " <div class=movieSecTopBox>";
+      let movieSecHTML = "";
+      movieSecHTML += '<div class="movieSec">';
+      movieSecHTML +=
+        ' <div class="movieSecTopBox" id="movieSecTopBox_' + index + '">';
       movieSecHTML +=
         '   <div class="topIframeBox"><iframe class="topIframe" src="https://www.youtube.com/embed/' +
         value.youtubeId +
         '"></iframe></div>';
       movieSecHTML +=
-        '<div class="titleTagBox">' +
+        '   <div class="titleTagBox">' +
         value.title +
-        "<br>" +
+        "   <br>" +
         value.titleTag +
-        "</div>";
+        "   </div>";
       movieSecHTML += " </div>";
       movieSecHTML += ' <div class="movieSecBottomBox">';
       $.each(sceneTagsArray, function(stIndex, stValue) {
         movieSecHTML +=
-          '   <div id="' +
+          '   <div id="sceneTagBox_' +
           stValue.sceneTagKey +
           '">' +
           stValue.startTime +
@@ -80,12 +78,37 @@ database.ref(userId).on("value", function(data) {
           stValue.endTime +
           ": " +
           stValue.sceneTags +
-          "</div>";
+          "   </div>";
       });
       movieSecHTML += " </div>";
       movieSecHTML += "</div>";
 
       $("#searchResults").append(movieSecHTML);
+
+      // 動画へのリンクイベント(全体再生)
+      $("#movieSecTopBox_" + index).on("click", function() {
+        window.location.href =
+          "tagScene.php?movieId=" +
+          index +
+          "&youtubeId=" +
+          value.youtubeId +
+          "&startTime=&endTime=";
+      });
+
+      // 動画へのリンクイベント(シーン再生)
+      $.each(sceneTagsArray, function(stIndex, stValue) {
+        $("#sceneTagBox_" + stValue.sceneTagKey).on("click", function() {
+          window.location.href =
+            "tagScene.php?movieId=" +
+            index +
+            "&youtubeId=" +
+            value.youtubeId +
+            "&startTime=" +
+            stValue.startTime +
+            "&endTime=" +
+            stValue.endTime;
+        });
+      });
     });
   } catch (e) {
     console.log("firebase is not set");

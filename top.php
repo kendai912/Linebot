@@ -64,9 +64,6 @@ if ($status == false) {
   </head>
 
   <body>
-    <header style="background-color:rgb(117, 151, 203)">
-      フットサル動画ストック
-    </header>
     <?php include('header.php'); ?>
     <div class="input-group md-form form-sm form-2 pl-0">
       <input

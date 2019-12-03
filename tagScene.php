@@ -1,3 +1,23 @@
+<?php
+include("funcs.php");
+
+//sessionによるバリデーション
+chk_ssid();
+
+//ログインチェック
+chk_login();
+
+function convertToSec($timeMinSec)
+{
+    $timeArray = explode(":", $timeMinSec);
+    return (int)$timeArray[0] * 60 + (int)$timeArray[1];
+}
+
+$src = "https://www.youtube.com/embed/" . h($_GET['youtubeId']) . "?enablejsapi=1&start=" .  convertToSec(h($_GET['startTime'])) . "&end=" . convertToSec(h($_GET['endTime']));
+$originalSrc = "https://www.youtube.com/embed/" . h($_GET['youtubeId']) . "?enablejsapi=1";
+
+?>
+
 <!DOCTYPE html>
 <html lang="ja">
   <head>
@@ -16,15 +36,12 @@
     />
   </head>
   <body>
-    <header style="background-color:rgb(117, 151, 203)">
-      フットサル動画ストック
-    </header>
     <?php include('header.php'); ?>
     <div class="embed-responsive embed-responsive-16by9">
       <iframe
         id="iframeBox"
         class="embed-responsive-item"
-        src="https://www.youtube.com/embed/H0knBbQsrUE?enablejsapi=1"
+        src="<?= $src ?>"
         allowfullscreen
       ></iframe>
     </div>
@@ -61,6 +78,19 @@
     </button>
     <div id="saveDoneBox" style="display: none;"></div>
     <div id="sceneTagsBox"></div>
+    <!-- JSに渡す変数用DOM -->
+    <div type="hidden"
+     id="userId"
+     style="display:none;"
+     data-val="<?= h($_SESSION['userId']) ?>"></div>
+    <div type="hidden"
+     id="movieId"
+     style="display:none;"
+     data-val="<?= h($_GET['movieId']) ?>"></div>
+    <div type="hidden"
+     id="originalSrc"
+     style="display:none;"
+     data-val="<?= $originalSrc ?>"></div>
 
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.2.1/firebase.js"></script>
