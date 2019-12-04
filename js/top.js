@@ -27,12 +27,61 @@ function convertToSec(timeMinSec) {
   );
 }
 
+function appendResult(movieId, sceneTagArray) {
+  //空の場合は何もしない
+  if (movieId == "") {
+    return;
+  }
+
+  //firebaseからデータ取得
+  database.ref(userId + "/" + movieId).on("value", function(data) {
+    try {
+      let movieSecHTML = "";
+      movieSecHTML += '<div class="movieSec">';
+      movieSecHTML +=
+        ' <div class="movieSecTopBox" id="movieSecTopBox_' + movieId + '">';
+      movieSecHTML +=
+        '   <div class="topIframeBox"><iframe class="topIframe" src="https://www.youtube.com/embed/' +
+        data.val().youtubeId +
+        '"></iframe></div>';
+      movieSecHTML +=
+        '   <div class="titleTagBox">' +
+        data.val().title +
+        "   <br>" +
+        data.val().titleTag +
+        "   </div>";
+      movieSecHTML += " </div>";
+      movieSecHTML += ' <div class="movieSecBottomBox">';
+      $.each(data.val().sceneTags, function(stIndex, stValue) {
+        if ($.inArray(stIndex, sceneTagArray) >= 0) {
+          movieSecHTML +=
+            '   <div id="sceneTagBox_' +
+            stIndex +
+            '">' +
+            stValue.startTime +
+            "〜" +
+            stValue.endTime +
+            ": " +
+            stValue.sceneTags +
+            "   </div>";
+        }
+      });
+      movieSecHTML += " </div>";
+      movieSecHTML += "</div>";
+
+      $("#searchResults").append(movieSecHTML);
+    } catch (e) {
+      console.log("firebase is not set");
+    }
+  });
+}
+
 //----------------------------------------------------
 // イベント
 //----------------------------------------------------
-//読み込み時の一覧表示(firebase接続)
 let userId = $("#userId").data("val");
 
+//読み込み時の一覧表示(firebase接続)
 database.ref(userId).on("value", function(data) {
   try {
     $.each(data.val(), function(index, value) {
@@ -113,4 +162,61 @@ database.ref(userId).on("value", function(data) {
   } catch (e) {
     console.log("firebase is not set");
   }
+});
+
+//検索ボタンイベント
+$("#searchBtn").on("click", function() {
+  let searchWordTitle = ".*";
+  let searchWordTag = ".*";
+  $("#searchResults").html("");
+
+  if ($("#searchWordTitleBox").val() != null) {
+    searchWordTitle = $("#searchWordTitleBox").val();
+  }
+  let searchWordTitleArray = searchWordTitle.split(/[\s*|　]/);
+  let regExpTitle = "^";
+  $.each(searchWordTitleArray, function(index, value) {
+    if (value != "") {
+      regExpTitle += "(?=.*" + value + ")";
+    }
+  });
+  regExpTitle += ".*$";
+  regExpTitle = new RegExp(regExpTitle, "g");
+
+  if ($("#searchWordTagBox").val() != null) {
+    searchWordTag = $("#searchWordTagBox").val();
+  }
+  let searchWordTagArray = searchWordTag.split(/[\s*|　]/);
+  let regExpTag = "^";
+  $.each(searchWordTagArray, function(index, value) {
+    if (value != "") {
+      regExpTag += "(?=.*" + value + ")";
+    }
+  });
+  regExpTag += ".*$";
+  regExpTag = new RegExp(regExpTag, "g");
+
+  database.ref(userId).on("value", function(data) {
+    try {
+      $.each(data.val(), function(mvIndex, mvValue) {
+        let resultObjArray = new Object();
+        resultObjArray.movieId = "";
+        resultObjArray.sceneTagArray = [];
+        if (
+          mvValue.title.match(regExpTitle) ||
+          mvValue.titleTag.match(regExpTitle)
+        ) {
+          $.each(mvValue.sceneTags, function(tgIndex, tgValue) {
+            if (tgValue.sceneTags.match(regExpTag)) {
+              resultObjArray.movieId = mvIndex;
+              resultObjArray.sceneTagArray.push(tgIndex);
+            }
+          });
+        }
+        appendResult(resultObjArray.movieId, resultObjArray.sceneTagArray);
+      });
+    } catch (e) {
+      console.log("firebase is not set");
+    }
+  });
 });

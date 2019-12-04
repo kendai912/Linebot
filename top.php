@@ -67,18 +67,20 @@ if ($status == false) {
     <?php include('header.php'); ?>
     <div class="input-group md-form form-sm form-2 pl-0">
       <input
+        id="searchWordTitleBox"
         class="form-control my-0 py-1 red-border"
         type="text"
         placeholder="タイトル・タグ"
         aria-label="titleSearch"
-      />
-      <input
+        />
+        <input
+        id="searchWordTagBox"
         class="form-control my-0 py-1 red-border"
         type="text"
         placeholder="シーン・タグ"
         aria-label="sceneSearch"
       />
-      <div class="input-group-append">
+      <div id="searchBtn" class="input-group-append">
         <span class="input-group-text red lighten-3" id="basic-text1"
           ><i class="fas fa-search text-grey" aria-hidden="true">検索</i
         ></span>
