@@ -163,20 +163,40 @@ function appendToSeaResult(movieId, sceneTagArray, playListIds) {
       //HTMLへappend実行
       $("#searchResults").append(movieSecHTML);
 
-      // 動画へのリンクイベント(全体再生)
-      $("#movieSecTopBox_" + movieId).on("click", function() {
-        window.location.href =
-          "tagScene.php?movieId=" +
-          movieId +
-          "&youtubeId=" +
-          data.val().youtubeId +
-          "&sceneTagKey=" +
-          "&startTime=&endTime=" +
-          "&playListIds=" +
-          JSON.stringify(playListIds);
-      });
+      // 動画へのリンクイベント(サムネイル＆タイトル部分)
+      if (playListIds[0].playMode == "whole") {
+        //playModeがwholeの場合は、シーン関連パラメータはなし
+        $("#movieSecTopBox_" + movieId).on("click", function() {
+          window.location.href =
+            "tagScene.php?movieId=" +
+            movieId +
+            "&youtubeId=" +
+            data.val().youtubeId +
+            "&sceneTagKey=" +
+            "&startTime=&endTime=" +
+            "&playListIds=" +
+            JSON.stringify(playListIds);
+        });
+      } else if (playListIds[0].playMode == "scene") {
+        //playModeがsceneの場合は、シーン関連パラメータに一番始めのシーンをセット
+        $("#movieSecTopBox_" + movieId).on("click", function() {
+          window.location.href =
+            "tagScene.php?movieId=" +
+            movieId +
+            "&youtubeId=" +
+            data.val().youtubeId +
+            "&sceneTagKey=" +
+            sceneTagArray[0] +
+            "&startTime=" +
+            data.val().sceneTags[sceneTagArray[0]].startTime +
+            "&endTime=" +
+            data.val().sceneTags[sceneTagArray[0]].endTime +
+            "&playListIds=" +
+            JSON.stringify(playListIds);
+        });
+      }
 
-      // 動画へのリンクイベント(シーン再生)
+      // 動画へのリンクイベント(シーンタグ部分)
       $.each(sortedSceneTagArray, function(stIndex, stValue) {
         $("#sceneTagBox_" + stValue.sceneTagKey).on("click", function() {
           window.location.href =
