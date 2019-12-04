@@ -129,6 +129,7 @@ let userId = $("#userId").data("val");
 //読み込み時の一覧表示(firebase接続)
 database.ref(userId).on("value", function(data) {
   try {
+    $("#searchResults").html("");
     $.each(data.val(), function(index, value) {
       let sceneTagsArray = [];
       $.each(value.sceneTags, function(sceneTagIndex, sceneTagValue) {
