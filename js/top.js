@@ -52,11 +52,31 @@ function appendResult(movieId, sceneTagArray) {
         "   </div>";
       movieSecHTML += " </div>";
       movieSecHTML += ' <div class="movieSecBottomBox">';
-      $.each(data.val().sceneTags, function(stIndex, stValue) {
-        if ($.inArray(stIndex, sceneTagArray) >= 0) {
+
+      //firebaseのシーンタグをsortedSceneTagArrayに移行
+      let sortedSceneTagArray = [];
+      $.each(data.val().sceneTags, function(sceneTagIndex, sceneTagValue) {
+        sceneTagValue["sceneTagKey"] = sceneTagIndex;
+        sortedSceneTagArray.push(sceneTagValue);
+      });
+
+      //開始時間順に並び替え
+      sortedSceneTagArray.sort(function(a, b) {
+        if (convertToSec(a.startTime) < convertToSec(b.startTime)) {
+          return -1;
+        }
+        if (convertToSec(a.startTime) > convertToSec(b.startTime)) {
+          return 1;
+        }
+        return 0;
+      });
+
+      //第二引数のsceneTagArrayに一致するものだけ追記
+      $.each(sortedSceneTagArray, function(stIndex, stValue) {
+        if ($.inArray(stValue.sceneTagKey, sceneTagArray) >= 0) {
           movieSecHTML +=
             '   <div id="sceneTagBox_' +
-            stIndex +
+            stValue.sceneTagKey +
             '">' +
             stValue.startTime +
             "〜" +
@@ -70,6 +90,31 @@ function appendResult(movieId, sceneTagArray) {
       movieSecHTML += "</div>";
 
       $("#searchResults").append(movieSecHTML);
+
+      // 動画へのリンクイベント(全体再生)
+      $("#movieSecTopBox_" + movieId).on("click", function() {
+        window.location.href =
+          "tagScene.php?movieId=" +
+          movieId +
+          "&youtubeId=" +
+          data.val().youtubeId +
+          "&startTime=&endTime=";
+      });
+
+      // 動画へのリンクイベント(シーン再生)
+      $.each(sortedSceneTagArray, function(stIndex, stValue) {
+        $("#sceneTagBox_" + stValue.sceneTagKey).on("click", function() {
+          window.location.href =
+            "tagScene.php?movieId=" +
+            movieId +
+            "&youtubeId=" +
+            data.val().youtubeId +
+            "&startTime=" +
+            stValue.startTime +
+            "&endTime=" +
+            stValue.endTime;
+        });
+      });
     } catch (e) {
       console.log("firebase is not set");
     }
