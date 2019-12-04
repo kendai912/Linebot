@@ -1,5 +1,15 @@
 "use strict";
 
+//tagScene.phpからのパラメーター引継ぎ
+let userId = $("#userId").data("val");
+let movieId = $("#movieId").data("val");
+let youtubeId = $("#youtubeId").data("val");
+let sceneTagKey = $("#sceneTagKey").data("val");
+let startTime = $("#startTime").data("val");
+let endTime = $("#endTime").data("val");
+let playListIds = $("#playListIds").data("val");
+let originalSrc = $("#originalSrc").data("val");
+
 //----------------------------------------------------
 // Initialize Firebase
 //----------------------------------------------------
@@ -28,7 +38,8 @@ function onYouTubeIframeAPIReady() {
       color: "white"
     },
     events: {
-      onReady: onPlayerReady
+      onReady: onPlayerReady,
+      onStateChange: onPlayerStateChange
     }
   });
 }
@@ -47,6 +58,89 @@ function formatTime(time) {
 function onPlayerReady(event) {
   event.target.mute();
   event.target.playVideo();
+}
+
+function onPlayerStateChange(event) {
+  if (event.data == 0) {
+    let movieIdNext;
+    let youtubeIdNext;
+    let sceneTagKeyNext;
+    let startTimeNext;
+    let endTimeNext;
+    //自分自身の位置を判定
+    $.each(playListIds, function(index, value) {
+      //全体再生モードかシーン再生モードか判定
+      if (value.playMode == "whole") {
+        //全体再生モードの場合はmovieIdのみを比較
+        if (value.movieId == movieId) {
+          //次のmovieIdをセット
+          movieIdNext = playListIds[index + 1].movieId;
+          //firebaseからyoutubeIdを取得
+          database.ref(userId + "/" + movieId).on("value", function(data) {
+            try {
+              youtubeIdNext = data.val().youtubeId;
+            } catch (e) {
+              console.log("firebase is not set");
+            }
+          });
+        }
+
+        sceneTagKeyNext = "";
+        startTimeNext = "";
+        endTimeNext = "";
+      } else if (value.playMode == "scene") {
+        //シーンモードの場合はmovieIdとsceneTagKeyを比較
+        if (value.movieId == movieId) {
+          $.each(value.sceneTagArray, function(scTagIndex, scTagValue) {
+            if (scTagValue == sceneTagKey) {
+              if (scTagIndex != value.sceneTagArray.length - 1) {
+                //sceneTagKeyが最後でなければ、movieIdはそのままでsceneTagKeyだけ次をセット
+                sceneTagKeyNext = value.sceneTagArray[scTagIndex + 1];
+              } else {
+                //sceneTagKeyが最後であれば、次のmovieIdとsceneTagKeyの0番目をセット
+                //もしmovieIdも最後の場合は、最初に戻す
+                if (index == playListIds.length - 1) {
+                  movieIdNext = playListIds[0].movieId;
+                  sceneTagKeyNext = playListIds[0].sceneTagArray[0];
+                } else {
+                  movieIdNext = playListIds[index + 1].movieId;
+                  sceneTagKeyNext = playListIds[index + 1].sceneTagArray[0];
+                }
+              }
+            }
+          });
+
+          database.ref(userId + "/" + movieIdNext).on("value", function(data) {
+            try {
+              //firebaseからyoutubeIdを取得
+              youtubeIdNext = data.val().youtubeId;
+
+              //firebaseからstartTime, endTimeを取得
+              startTimeNext = data.val().sceneTags[sceneTagKeyNext].startTime;
+              endTimeNext = data.val().sceneTags[sceneTagKeyNext].endTime;
+
+              //プレイリストの次の動画・シーンをパラメーターにセットして送信
+              window.location.href =
+                "tagScene.php?movieId=" +
+                movieIdNext +
+                "&youtubeId=" +
+                youtubeIdNext +
+                "&sceneTagKey=" +
+                sceneTagKeyNext +
+                "&startTime=" +
+                startTimeNext +
+                "&endTime=" +
+                endTimeNext +
+                "&playListIds=" +
+                JSON.stringify(playListIds);
+            } catch (e) {
+              console.log("firebase is not set");
+            }
+          });
+        }
+      }
+    });
+  }
 }
 
 //----------------------------------------------------
@@ -92,13 +186,6 @@ function tagTimeValidate() {
   return true;
 }
 
-function convertToSec(timeMinSec) {
-  return (
-    parseInt(timeMinSec.split(":")[0], 10) * 60 +
-    parseInt(timeMinSec.split(":")[1], 10)
-  );
-}
-
 function tagNameValidate() {
   if (
     !$("#sceneTags")
@@ -113,13 +200,14 @@ function tagNameValidate() {
   return true;
 }
 
-$(function() {
-  //phpファイルからのuserId, movieIdの引継ぎ
-  let userId = $("#userId").data("val");
-  let movieId = $("#movieId").data("val");
-  // let userId = "U5675b178054001cb3f7f6f00920faa92";
-  // let movieId = "-LvA72rP0D60Hq7DzvE6";
+function convertToSec(timeMinSec) {
+  return (
+    parseInt(timeMinSec.split(":")[0], 10) * 60 +
+    parseInt(timeMinSec.split(":")[1], 10)
+  );
+}
 
+$(function() {
   //----------------------------------------------------
   // イベント(Youtube関連)
   //----------------------------------------------------
@@ -217,7 +305,7 @@ $(function() {
           return 0;
         });
 
-        let originalSrc = $("#originalSrc").data("val");
+        // let originalSrc = $("#originalSrc").data("val");
         $("#sceneTagsBox").html(
           '<div id="playAll">全体を再生</div><div id="playScene">シーンを再生</div>'
         );

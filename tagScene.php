@@ -88,9 +88,30 @@ $originalSrc = "https://www.youtube.com/embed/" . h($_GET['youtubeId']) . "?enab
      style="display:none;"
      data-val="<?= h($_GET['movieId']) ?>"></div>
     <div type="hidden"
+     id="youtubeId"
+     style="display:none;"
+     data-val="<?= h($_GET['youtubeId']) ?>"></div>
+    <div type="hidden"
+     id="sceneTagKey"
+     style="display:none;"
+     data-val="<?= h($_GET['sceneTagKey']) ?>"></div>
+    <div type="hidden"
+     id="startTime"
+     style="display:none;"
+     data-val="<?= h($_GET['startTime']) ?>"></div>
+    <div type="hidden"
+     id="endTime"
+     style="display:none;"
+     data-val="<?= h($_GET['endTime']) ?>"></div>
+    <div type="hidden"
+     id="playListIds"
+     style="display:none;"
+     data-val="<?= h($_GET['playListIds']) ?>"></div>
+    <div type="hidden"
      id="originalSrc"
      style="display:none;"
      data-val="<?= $originalSrc ?>"></div>
+    <!-- ここまで -->
 
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.2.1/firebase.js"></script>
