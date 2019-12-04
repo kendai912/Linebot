@@ -27,7 +27,75 @@ function convertToSec(timeMinSec) {
   );
 }
 
-function appendResult(movieId, sceneTagArray) {
+function getPlayListIds(searchWordTitle, searchWordTag, playMode) {
+  //タイトル検索用の正規表現
+  if (searchWordTitle == "") {
+    searchWordTitle = ".*";
+  }
+  let searchWordTitleArray = searchWordTitle.split(/[\s*|　]/);
+  let regExpTitle = "^";
+  $.each(searchWordTitleArray, function(index, value) {
+    if (value != "") {
+      regExpTitle += "(?=.*" + value + ")";
+    }
+  });
+  regExpTitle += ".*$";
+  regExpTitle = new RegExp(regExpTitle, "g");
+
+  //シーン検索用の正規表現
+  if (searchWordTag == "") {
+    searchWordTag = ".*";
+  }
+  let searchWordTagArray = searchWordTag.split(/[\s*|　]/);
+  let regExpTag = "^";
+  $.each(searchWordTagArray, function(index, value) {
+    if (value != "") {
+      regExpTag += "(?=.*" + value + ")";
+    }
+  });
+  regExpTag += ".*$";
+  regExpTag = new RegExp(regExpTag, "g");
+
+  //firebaseの全動画にアクセス
+  let resultObjArray = [];
+  database.ref(userId).on("value", function(data) {
+    try {
+      $.each(data.val(), function(mvIndex, mvValue) {
+        let movieObj = new Object();
+        movieObj.movieId = "";
+        movieObj.sceneTagArray = [];
+
+        if (playMode == "whole") {
+          movieObj.playMode = "whole";
+        } else if (playMode == "scene") {
+          movieObj.playMode = "scene";
+        }
+
+        //タイトル一致判定(タイトルorタイトルタグ)
+        if (
+          mvValue.title.match(regExpTitle) ||
+          mvValue.titleTag.match(regExpTitle)
+        ) {
+          $.each(mvValue.sceneTags, function(tgIndex, tgValue) {
+            //シーン一致判定
+            if (tgValue.sceneTags.match(regExpTag)) {
+              //一致したものをオブジェクトに格納
+              movieObj.movieId = mvIndex;
+              movieObj.sceneTagArray.push(tgIndex);
+            }
+          });
+          resultObjArray.push(movieObj);
+        }
+      });
+    } catch (e) {
+      console.log("firebase is not set");
+      return null;
+    }
+  });
+  return resultObjArray;
+}
+
+function appendToSeaResult(movieId, sceneTagArray, playListIds) {
   //空の場合は何もしない
   if (movieId == "") {
     return;
@@ -36,6 +104,7 @@ function appendResult(movieId, sceneTagArray) {
   //firebaseからデータ取得
   database.ref(userId + "/" + movieId).on("value", function(data) {
     try {
+      //append用のHTML作成
       let movieSecHTML = "";
       movieSecHTML += '<div class="movieSec">';
       movieSecHTML +=
@@ -89,6 +158,7 @@ function appendResult(movieId, sceneTagArray) {
       movieSecHTML += " </div>";
       movieSecHTML += "</div>";
 
+      //HTMLへappend実行
       $("#searchResults").append(movieSecHTML);
 
       // 動画へのリンクイベント(全体再生)
@@ -98,7 +168,10 @@ function appendResult(movieId, sceneTagArray) {
           movieId +
           "&youtubeId=" +
           data.val().youtubeId +
-          "&startTime=&endTime=";
+          "&sceneTagKey=" +
+          "&startTime=&endTime=" +
+          "&playListIds=" +
+          JSON.stringify(playListIds);
       });
 
       // 動画へのリンクイベント(シーン再生)
@@ -109,10 +182,14 @@ function appendResult(movieId, sceneTagArray) {
             movieId +
             "&youtubeId=" +
             data.val().youtubeId +
+            "&sceneTagKey=" +
+            stValue.sceneTagKey +
             "&startTime=" +
             stValue.startTime +
             "&endTime=" +
-            stValue.endTime;
+            stValue.endTime +
+            "&playListIds=" +
+            JSON.stringify(playListIds);
         });
       });
     } catch (e) {
@@ -126,84 +203,99 @@ function appendResult(movieId, sceneTagArray) {
 //----------------------------------------------------
 let userId = $("#userId").data("val");
 
+//連続再生のためのPlayListIDsオブジェクトを取得
+let playListIds = getPlayListIds("", "", "whole");
+console.log(playListIds);
+
 //読み込み時の一覧表示(firebase接続)
 database.ref(userId).on("value", function(data) {
   try {
+    //画面クリア
     $("#searchResults").html("");
     $.each(data.val(), function(index, value) {
-      let sceneTagsArray = [];
-      $.each(value.sceneTags, function(sceneTagIndex, sceneTagValue) {
-        sceneTagValue["sceneTagKey"] = sceneTagIndex;
-        sceneTagsArray.push(sceneTagValue);
+      //動画毎にsceneTagのIndexだけ抜き出して配列として追加
+      let sceneTagArray = [];
+      $.each(value.sceneTags, function(stgIndex, stgValue) {
+        sceneTagArray.push(stgIndex);
       });
 
-      sceneTagsArray.sort(function(a, b) {
-        if (convertToSec(a.startTime) < convertToSec(b.startTime)) {
-          return -1;
-        }
-        if (convertToSec(a.startTime) > convertToSec(b.startTime)) {
-          return 1;
-        }
-        return 0;
-      });
+      //HTMLにappend
+      // appendToSeaResult(index, sceneTagArray);
+      appendToSeaResult(index, sceneTagArray, playListIds);
 
-      let movieSecHTML = "";
-      movieSecHTML += '<div class="movieSec">';
-      movieSecHTML +=
-        ' <div class="movieSecTopBox" id="movieSecTopBox_' + index + '">';
-      movieSecHTML +=
-        '   <div class="topIframeBox"><iframe class="topIframe" src="https://www.youtube.com/embed/' +
-        value.youtubeId +
-        '"></iframe></div>';
-      movieSecHTML +=
-        '   <div class="titleTagBox">' +
-        value.title +
-        "   <br>" +
-        value.titleTag +
-        "   </div>";
-      movieSecHTML += " </div>";
-      movieSecHTML += ' <div class="movieSecBottomBox">';
-      $.each(sceneTagsArray, function(stIndex, stValue) {
-        movieSecHTML +=
-          '   <div id="sceneTagBox_' +
-          stValue.sceneTagKey +
-          '">' +
-          stValue.startTime +
-          "〜" +
-          stValue.endTime +
-          ": " +
-          stValue.sceneTags +
-          "   </div>";
-      });
-      movieSecHTML += " </div>";
-      movieSecHTML += "</div>";
+      // let sceneTagsArray = [];
+      // $.each(value.sceneTags, function(sceneTagIndex, sceneTagValue) {
+      //   sceneTagValue["sceneTagKey"] = sceneTagIndex;
+      //   sceneTagsArray.push(sceneTagValue);
+      // });
 
-      $("#searchResults").append(movieSecHTML);
+      // sceneTagsArray.sort(function(a, b) {
+      //   if (convertToSec(a.startTime) < convertToSec(b.startTime)) {
+      //     return -1;
+      //   }
+      //   if (convertToSec(a.startTime) > convertToSec(b.startTime)) {
+      //     return 1;
+      //   }
+      //   return 0;
+      // });
 
-      // 動画へのリンクイベント(全体再生)
-      $("#movieSecTopBox_" + index).on("click", function() {
-        window.location.href =
-          "tagScene.php?movieId=" +
-          index +
-          "&youtubeId=" +
-          value.youtubeId +
-          "&startTime=&endTime=";
-      });
+      // let movieSecHTML = "";
+      // movieSecHTML += '<div class="movieSec">';
+      // movieSecHTML +=
+      //   ' <div class="movieSecTopBox" id="movieSecTopBox_' + index + '">';
+      // movieSecHTML +=
+      //   '   <div class="topIframeBox"><iframe class="topIframe" src="https://www.youtube.com/embed/' +
+      //   value.youtubeId +
+      //   '"></iframe></div>';
+      // movieSecHTML +=
+      //   '   <div class="titleTagBox">' +
+      //   value.title +
+      //   "   <br>" +
+      //   value.titleTag +
+      //   "   </div>";
+      // movieSecHTML += " </div>";
+      // movieSecHTML += ' <div class="movieSecBottomBox">';
+      // $.each(sceneTagsArray, function(stIndex, stValue) {
+      //   movieSecHTML +=
+      //     '   <div id="sceneTagBox_' +
+      //     stValue.sceneTagKey +
+      //     '">' +
+      //     stValue.startTime +
+      //     "〜" +
+      //     stValue.endTime +
+      //     ": " +
+      //     stValue.sceneTags +
+      //     "   </div>";
+      // });
+      // movieSecHTML += " </div>";
+      // movieSecHTML += "</div>";
 
-      // 動画へのリンクイベント(シーン再生)
-      $.each(sceneTagsArray, function(stIndex, stValue) {
-        $("#sceneTagBox_" + stValue.sceneTagKey).on("click", function() {
-          window.location.href =
-            "tagScene.php?movieId=" +
-            index +
-            "&youtubeId=" +
-            value.youtubeId +
-            "&startTime=" +
-            stValue.startTime +
-            "&endTime=" +
-            stValue.endTime;
-        });
-      });
+      // $("#searchResults").append(movieSecHTML);
+
+      // // 動画へのリンクイベント(全体再生)
+      // $("#movieSecTopBox_" + index).on("click", function() {
+      //   window.location.href =
+      //     "tagScene.php?movieId=" +
+      //     index +
+      //     "&youtubeId=" +
+      //     value.youtubeId +
+      //     "&startTime=&endTime=";
+      // });
+
+      // // 動画へのリンクイベント(シーン再生)
+      // $.each(sceneTagsArray, function(stIndex, stValue) {
+      //   $("#sceneTagBox_" + stValue.sceneTagKey).on("click", function() {
+      //     window.location.href =
+      //       "tagScene.php?movieId=" +
+      //       index +
+      //       "&youtubeId=" +
+      //       value.youtubeId +
+      //       "&startTime=" +
+      //       stValue.startTime +
+      //       "&endTime=" +
+      //       stValue.endTime;
+      //   });
+      // });
     });
   } catch (e) {
     console.log("firebase is not set");
@@ -212,10 +304,12 @@ database.ref(userId).on("value", function(data) {
 
 //検索ボタンイベント
 $("#searchBtn").on("click", function() {
+  //画面クリア
+  $("#searchResults").html("");
   let searchWordTitle = ".*";
   let searchWordTag = ".*";
-  $("#searchResults").html("");
 
+  //タイトル検索用の正規表現
   if ($("#searchWordTitleBox").val() != null) {
     searchWordTitle = $("#searchWordTitleBox").val();
   }
@@ -229,6 +323,7 @@ $("#searchBtn").on("click", function() {
   regExpTitle += ".*$";
   regExpTitle = new RegExp(regExpTitle, "g");
 
+  //シーン検索用の正規表現
   if ($("#searchWordTagBox").val() != null) {
     searchWordTag = $("#searchWordTagBox").val();
   }
@@ -242,24 +337,43 @@ $("#searchBtn").on("click", function() {
   regExpTag += ".*$";
   regExpTag = new RegExp(regExpTag, "g");
 
+  let playMode;
+  if ($("#searchWordTagBox").val() == "") {
+    playMode = "whole";
+  } else {
+    playMode = "scene";
+  }
+
+  //連続再生のためのPlayListIDsオブジェクトを取得
+  let playListIds = getPlayListIds(searchWordTitle, searchWordTag, playMode);
+  console.log(playListIds);
+
   database.ref(userId).on("value", function(data) {
     try {
       $.each(data.val(), function(mvIndex, mvValue) {
         let resultObjArray = new Object();
         resultObjArray.movieId = "";
         resultObjArray.sceneTagArray = [];
+        //タイトル一致判定
         if (
           mvValue.title.match(regExpTitle) ||
           mvValue.titleTag.match(regExpTitle)
         ) {
           $.each(mvValue.sceneTags, function(tgIndex, tgValue) {
+            //シーン一致判定
             if (tgValue.sceneTags.match(regExpTag)) {
+              //一致したものをオブジェクトに格納
               resultObjArray.movieId = mvIndex;
               resultObjArray.sceneTagArray.push(tgIndex);
             }
           });
         }
-        appendResult(resultObjArray.movieId, resultObjArray.sceneTagArray);
+        //動画毎に検索にヒットしたオブジェクトをHTMLにappend
+        appendToSeaResult(
+          resultObjArray.movieId,
+          resultObjArray.sceneTagArray,
+          playListIds
+        );
       });
     } catch (e) {
       console.log("firebase is not set");
